@@ -1,0 +1,203 @@
+
+################################
+## Cluster Configuration File ##
+################################
+
+[environmentref vnet]
+SourceClusterName = $VnetEnvCluster
+
+[noderef master]
+
+[cluster moosefs]
+FormLayout = selectionpanel
+Category = Filesystems 
+AutoScale = false
+UseLowPrio = false
+
+    [[node defaults]]
+    UsePublicNetwork = $UsePublicNetwork
+    Credentials = $Credentials    
+    ImageName = $ImageName
+    SubnetId = ${vnet.outputs.subnet1Id}
+    Region = $Region
+    KeyPairLocation = ~/.ssh/cyclecloud.pem
+    
+
+    [[node master]]
+    MachineType = $MasterMachineType
+    IsReturnProxy = $ReturnProxy
+    
+        [[[cluster-init moosefs:master:$MoosefsProjectVersion]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $UsePublicNetwork
+
+        [[[input-endpoint ganglia]]]
+        PrivatePort = 8652
+        PublicPort = 8652
+
+        [[[input-endpoint moosefs]]]
+        PrivatePort = 9425
+        PublicPort = 9425
+
+
+    [[nodearray chunk]]
+    MachineType = $ChunkMachineType
+    Azure.SingleScaleset = true
+    Azure.Overprovision = true
+    InitialCount = $InitialChunkCount 
+
+        [[[configuration]]]
+        moosefs.masterip = ${master.instance.privateip}
+        moosefs.rootdir = $MooseFSRoot
+
+        [[[cluster-init moosefs:chunk:$MoosefsProjectVersion]]]
+
+        [[[configuration cyclecloud.mounts.nvme]]]
+        mountpoint = $MooseFSRoot
+        fs_type = xfs
+        devices = /dev/nvme0n1
+        size = 100%
+        Optional = true
+
+    [[nodearray client]]
+    MachineType = $ClientMachineType
+
+        [[[cluster-init moosefs:client:$MoosefsProjectVersion]]]
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $ExecuteNodesPublic
+
+        [[[configuration]]]
+        moosefs.masterip = ${master.instance.privateip}
+		moosefs.mountpoint = $MooseFSMount
+		
+[parameters About]
+Order = 1
+
+    [[parameters About cyclecloud-moosefs]]
+
+        [[[parameter cyclecloud-moosefs]]]
+        HideLabel = true
+        Config.Plugin = pico.widget.HtmlTemplateWidget
+        Config.Template := "<table><tr><td><p>BeeGFS is a parallel cluster file system. See the <a href=\"https://moosefs.com/\" target=\"_blank\">MooseFS project site</a> for an overview.</p></td></tr></table>"
+
+[parameters Required Settings]
+Order = 10
+
+    [[parameters Virtual Machines ]]
+    Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application."
+    Order = 20
+
+        [[[parameter Region]]]
+        Label = Region
+        Description = Deployment Location
+        ParameterType = Cloud.Region
+        DefaultValue = westeurope
+
+        [[[parameter MasterMachineType]]]
+        Label = MDS VM Type
+        Description = The VM type for the MDS/MGS and OSS nodes of Lustre.
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_E8_v3
+
+        [[[parameter ChunkMachineType]]]
+        Label = Client VM Type
+        Description = The VM type for client nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_L8s_v2
+        Config.Multiselect = true
+
+        [[[parameter ClientMachineType]]]
+        Label = Client VM Type
+        Description = The VM type for client nodes
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_D4_v3
+        Config.Multiselect = true
+
+    [[parameters Networking]]
+    Order = 40
+
+        [[[parameter SubnetId]]]
+        Label = Subnet ID
+        Description = Subnet Resource Path (ResourceGroup/VirtualNetwork/Subnet)
+        ParameterType = Azure.Subnet
+        Required = True
+
+
+[parameters Advanced Settings]
+Order = 20
+
+    [[parameters Azure Settings]]
+    Order = 10 
+
+        [[[parameter Credentials]]]
+        Description = The credentials for the cloud provider
+        ParameterType = Cloud.Credentials
+
+
+    [[parameters Software]]
+    Description = "Specify the scheduling software, and base OS installed on all nodes, and optionally the cluster-init and chef versions from your Locker."
+    Order = 20
+
+        [[[parameter ImageName]]]
+        Label = Base OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = cycle.image.ubuntu18
+		
+
+    [[parameters Advanced Networking]]
+    Description = Advanced networking settings
+
+        [[[parameter ReturnProxy]]]
+        Label = Return Proxy
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Use SSH tunnel to connect to CycleCloud (required if direct access is blocked)
+
+        [[[parameter UsePublicNetwork]]]
+        Label = Public Head Node
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Access master node from the Internet
+
+        [[[parameter ExecuteNodesPublic]]]
+        Label = Public Execute
+        DefaultValue = false
+        ParameterType = Boolean
+        Config.Label = Access execute nodes from the Internet
+        Conditions.Excluded := UsePublicNetwork isnt true
+
+    [[parameters MooseFS Settings]]
+    Description = "Section for configuring MooseFS"
+    Order = 5
+
+        [[[parameter MooseFSRoot ]]]
+        Label = Chunk folder
+        Description = The root directory for MooseFS on master and chunk nodes
+        DefaultValue = /data/mfs    
+
+        [[[parameter MooseFSMount ]]]
+        Label = Client mountpoint
+        Description = The root directory for MooseFS on master and chunk nodes
+        DefaultValue = /mnt/mfs   
+
+        [[[parameter InitialChunkCount]]]
+        Label = Chunk VM Count
+        Description = The number of chunk nodes to start
+        DefaultValue = 2
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.MaxValue = 10
+        Config.IntegerOnly = true
+
+        [[[parameter InitialClientCount]]]
+        Label = Client VM Count
+        Description = The number of client nodes to launch at startup
+        DefaultValue = 1
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.MaxValue = 8
+        Config.IntegerOnly = true
+
