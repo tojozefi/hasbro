@@ -22,13 +22,15 @@ run_moosefs_bench () {
   cyclecloud start_cluster $CLUSTER_NAME
 
   cyclecloud import_cluster ${CLUSTER_NAME}-io -c bench -f io-bench.txt \
-    -p $_params \
+    -p $COMBINED_PARAMS \
     -P BenchClusterName=$CLUSTER_NAME \
     -P TargetName=${1} \
     -P TargetSize=${COUNT} \
     -P RunId=${RUN_ID} \
     -P StorageCluster=$CLUSTER_NAME \
     -P SendReport=true \
+	  -P MooseFSMount="/bench" \
+	  -P MoosefsProjectVersion="1.0.0" \
     -P VnetEnvCluster=$VNET_CLUSTERNAME
 
   cyclecloud start_cluster ${CLUSTER_NAME}-io
