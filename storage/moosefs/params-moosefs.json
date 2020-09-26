@@ -1,0 +1,19 @@
+{
+  "UsePublicNetwork" : true,
+  "MasterVMType" : "Standard_E8_v3",
+  "ReturnProxy" : true,
+  "Credentials" : "azure",
+  "ClientVMType" : "Standard_D2_v3",
+  "InitialStorageCount" : 0,
+  "MooseFSRoot" : "/data/moosefs",
+  "MooseFSMount" : "/bench",
+  "MasterClusterInitSpecs" : null,
+  "MetadataDiskSize" : 1024,
+  "ChunkVMType" : "Standard_L8s_v2",
+  "ImageName" : "cycle.image.ubuntu18",
+  "ClientImageName" : "cycle.image.centos7",
+  "ExecuteNodesPublic" : false,
+  "ExecuteClusterInitSpecs" : null,
+  "InitialClientCount" : 0,
+  "MoosefsProjectVersion" : "1.0.0"
+}
