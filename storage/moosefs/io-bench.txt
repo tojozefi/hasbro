@@ -15,7 +15,7 @@ SourceClusterName = $BenchClusterName
         Credentials = $Credentials
         Region = $Region
         KeyPairLocation = ~/.ssh/cyclecloud.pem
-        ImageName = $ClientImageName
+        ImageName = $ImageName
         SubnetId = ${vnet.outputs.subnet2Id}
         #Azure.Identities = $VMIdentity 
 
@@ -37,7 +37,7 @@ SourceClusterName = $BenchClusterName
         benchmark.client_nodes = $ClientNodeCount
         benchmark.send_report = $SendReport
 
-        moosefs.masterip = ${master.instance.privateip}
+		moosefs.masterip = ${master.instance.privateip}
         moosefs.mountpoint = $MooseFSMount
 
         [[[cluster-init cyclecloud/pbspro:default]]]
