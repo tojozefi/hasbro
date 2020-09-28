@@ -24,7 +24,7 @@ UseLowPrio = false
     
 
     [[node master]]
-    MachineType = $MasterMachineType
+    MachineType = $MasterVMType
     IsReturnProxy = $ReturnProxy
     
         [[[cluster-init moosefs:master:$MoosefsProjectVersion]]]
@@ -42,7 +42,7 @@ UseLowPrio = false
 
 
     [[nodearray chunk]]
-    MachineType = $ChunkMachineType
+    MachineType = $ChunkVMType
     Azure.SingleScaleset = true
     Azure.Overprovision = true
     InitialCount = $InitialChunkCount 
@@ -61,7 +61,7 @@ UseLowPrio = false
         Optional = true
 
     [[nodearray client]]
-    MachineType = $ClientMachineType
+    MachineType = $ClientVMType
 
         [[[cluster-init moosefs:client:$MoosefsProjectVersion]]]
 
@@ -95,20 +95,20 @@ Order = 10
         ParameterType = Cloud.Region
         DefaultValue = westeurope
 
-        [[[parameter MasterMachineType]]]
+        [[[parameter MasterVMType]]]
         Label = MDS VM Type
         Description = The VM type for the MDS/MGS and OSS nodes of Lustre.
         ParameterType = Cloud.MachineType
         DefaultValue = Standard_E8_v3
 
-        [[[parameter ChunkMachineType]]]
+        [[[parameter ChunkVMType]]]
         Label = Client VM Type
         Description = The VM type for client nodes
         ParameterType = Cloud.MachineType
         DefaultValue = Standard_L8s_v2
         Config.Multiselect = true
 
-        [[[parameter ClientMachineType]]]
+        [[[parameter ClientVMType]]]
         Label = Client VM Type
         Description = The VM type for client nodes
         ParameterType = Cloud.MachineType
